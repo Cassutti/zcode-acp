@@ -1441,15 +1441,8 @@ export class ZcodeAcpServer {
    * elicitation.form`). When true, AskUserQuestion / ExitPlanMode can use the
    * richer `elicitation/create` form UI; otherwise they fall back to
    * `session/request_permission`.
-   *
-   * Clients that render the schema as a per-field wizard (T3 Code) are gated
-   * off: their stepper walks the AskUserQuestion answer field and its
-   * free-text companion as two consecutive questions, and the companion's
-   * answer overrides the dropdown pick — see
-   * {@link clientPrefersPermissionPopups}.
    */
   supportsElicitationForm(): boolean {
-    if (clientPrefersPermissionPopups(this.clientName)) return false;
     return this.clientCapabilities.elicitation?.form != null;
   }
 

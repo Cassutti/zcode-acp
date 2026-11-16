@@ -51,11 +51,12 @@ export function isAskUserQuestion(method: string, params: unknown): boolean {
  * Whether this client renders an elicitation form schema as a multi-step
  * wizard — one step per field — instead of one single form.
  *
- * T3 Code does: its stepper walks the AskUserQuestion answer field and the
+ * T3 Code does: its stepper walked the AskUserQuestion answer field and the
  * free-text companion as if they were two consecutive questions, and the
  * companion's answer overrides the dropdown pick by design. For such clients
- * the `session/request_permission` fallback — one popup with the option list
- * and a Skip — is the correct surface, so the elicitation form is gated off.
+ * the AskUserQuestion form is built WITHOUT the companion field, so the form
+ * walks as a single step per question (elicitation is never auto-answered by
+ * permission modes; the request_permission fallback is).
  */
 export function clientPrefersPermissionPopups(clientName: string | null | undefined): boolean {
   return (clientName ?? "").toLowerCase().includes("t3-code");
@@ -634,6 +635,7 @@ export function buildAskUserElicitationForm(
   params: ZcodeInteractionUserInputParams,
   acpSid: string,
   toolCallId?: string,
+  opts?: { omitCompanion?: boolean },
 ): {
   mode: "form";
   sessionId: string;
@@ -675,13 +677,18 @@ export function buildAskUserElicitationForm(
     // prominently, and falls back to the description when title is absent — so
     // a bright label here is unavoidable. Prefix with "↳" + padding so it reads
     // as a continuation of the question above, and make the title self-contained
-    // (no description needed).
-    properties[`${key}_other`] = {
-      type: "string",
-      title: q.multiSelect
-        ? "↳    or add a custom value (combined with the selection)"
-        : "↳    or type a custom value (overrides the selection)",
-    };
+    // (no description needed). Wizard-style clients (T3 Code) render each
+    // schema field as a separate wizard step, and the companion's answer
+    // overrides the dropdown by design — for them the field is omitted so the
+    // whole form walks as a single step per question.
+    if (!opts?.omitCompanion) {
+      properties[`${key}_other`] = {
+        type: "string",
+        title: q.multiSelect
+          ? "↳    or add a custom value (combined with the selection)"
+          : "↳    or type a custom value (overrides the selection)",
+      };
+    }
   }
   // The question text already appears as each field's `title` (its label), so
   // the form `message` must NOT repeat it — otherwise Zed shows the question

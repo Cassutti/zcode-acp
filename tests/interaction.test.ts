@@ -290,6 +290,18 @@ describe("elicitation form: AskUserQuestion", () => {
     expect(form.requestedSchema.required).toEqual([]);
   });
 
+  it("omitCompanion: wizard-style clients get one field per question (no free-text override)", () => {
+    const form = buildAskUserElicitationForm(baseParams, "acp_1", undefined, {
+      omitCompanion: true,
+    });
+    expect(Object.keys(form.requestedSchema.properties)).toEqual(["q_0"]);
+    // The dropdown keeps the options and the Skip escape hatch.
+    const prop = form.requestedSchema.properties.q_0 as {
+      oneOf?: Array<{ const: string }>;
+    };
+    expect(prop.oneOf?.map((o) => o.const)).toEqual(["Red", "Blue", "__skip__"]);
+  });
+
   it("parse: free-text override wins over dropdown (single-select)", () => {
     const answers = parseAskUserElicitationResponse(
       { action: "accept", content: { q_0: "Red", q_0_other: "magenta" } },

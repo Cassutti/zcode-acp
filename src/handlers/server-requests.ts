@@ -34,6 +34,7 @@ import {
   buildAskUserAcpParams,
   buildAskUserElicitationForm,
   buildPlanApprovalElicitationForm,
+  clientPrefersPermissionPopups,
   enrichPermissionOptions,
   exitPlanModeToAcpPermission,
   isAskUserQuestion,
@@ -875,7 +876,13 @@ async function handleAskUserViaElicitation(
     rawInput,
     _meta: { claudeCode: { toolName } },
   });
-  const formParams = buildAskUserElicitationForm(params, acpSid, toolCallId || undefined);
+  // Wizard-style clients (T3 Code) walk each schema field as a separate step,
+  // and the free-text companion overrides the dropdown answer — omit it so the
+  // form reads as one step per question. Elicitation is never auto-answered by
+  // permission modes; request_permission is, which would skip the user.
+  const formParams = buildAskUserElicitationForm(params, acpSid, toolCallId || undefined, {
+    omitCompanion: clientPrefersPermissionPopups(server.clientName),
+  });
   log(
     `  ⟳ AskUserQuestion forwarding elicitation/create (form, ${Object.keys(formParams.requestedSchema.properties).length} fields)`,
   );
