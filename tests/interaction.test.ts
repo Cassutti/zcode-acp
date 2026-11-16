@@ -10,8 +10,8 @@ import {
   acpPermissionResponseToExitPlanMode,
   acpPermissionResponseToZcode,
   buildAskUserElicitationForm,
-  clientPrefersPermissionPopups,
   isPermissionRequest,
+  isWizardStyleFormClient,
   isUserInputRequest,
   parseAskUserElicitationResponse,
   parseAskUserResponse,
@@ -37,19 +37,19 @@ describe("classification", () => {
   });
 });
 
-describe("clientPrefersPermissionPopups", () => {
-  it("gates off the elicitation form for T3 Code (per-field wizard stepper)", () => {
-    expect(clientPrefersPermissionPopups("t3-code-session-manager")).toBe(true);
-    expect(clientPrefersPermissionPopups("t3-code-provider-test")).toBe(true);
-    expect(clientPrefersPermissionPopups("T3-Code")).toBe(true);
+describe("isWizardStyleFormClient", () => {
+  it("detects T3 Code (its stepper renders one step per schema field)", () => {
+    expect(isWizardStyleFormClient("t3-code-session-manager")).toBe(true);
+    expect(isWizardStyleFormClient("t3-code-provider-test")).toBe(true);
+    expect(isWizardStyleFormClient("T3-Code")).toBe(true);
   });
 
-  it("keeps the elicitation form for other clients", () => {
-    expect(clientPrefersPermissionPopups("Zed")).toBe(false);
-    expect(clientPrefersPermissionPopups("martty")).toBe(false);
-    expect(clientPrefersPermissionPopups(null)).toBe(false);
-    expect(clientPrefersPermissionPopups(undefined)).toBe(false);
-    expect(clientPrefersPermissionPopups("")).toBe(false);
+  it("keeps other clients on the full form", () => {
+    expect(isWizardStyleFormClient("Zed")).toBe(false);
+    expect(isWizardStyleFormClient("martty")).toBe(false);
+    expect(isWizardStyleFormClient(null)).toBe(false);
+    expect(isWizardStyleFormClient(undefined)).toBe(false);
+    expect(isWizardStyleFormClient("")).toBe(false);
   });
 });
 

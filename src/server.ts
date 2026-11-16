@@ -25,7 +25,7 @@ import {
   readGlobalSandboxConfig,
   sandboxActive,
 } from "./backend/sandbox.js";
-import { clientPrefersPermissionPopups } from "./interaction/adapter.js";
+import { isWizardStyleFormClient } from "./interaction/adapter.js";
 import { clearClosedSessionIds } from "./closed-sessions.js";
 import {
   captureGate,
@@ -433,6 +433,8 @@ export class ZcodeAcpServer {
    * this flag instead.
    */
   marttyClientSeen = false;
+  /** Same sticky semantics as marttyClientSeen, for wizard-style clients (T3 Code). */
+  wizardClientSeen = false;
   /**
    * Connection roots (clientConnectionRoot identity) of connections known to
    * be Martty — recorded at THAT connection's `initialize`, never inherited
@@ -1460,6 +1462,16 @@ export class ZcodeAcpServer {
   }
 
   /**
+   * Whether a wizard-style form client (T3 Code) is (or was) attached to this
+   * bridge process — same sticky semantics as hasMarttyClient. Its stepper
+   * renders each elicitation schema field as a separate step, so AskUserQuestion
+   * must omit the free-text companion field (see buildAskUserElicitationForm).
+   */
+  hasWizardStyleClient(): boolean {
+    return this.wizardClientSeen || isWizardStyleFormClient(this.clientName);
+  }
+
+  /**
    * OR-merge capabilities from a newly connected client. Each connection runs
    * its own `initialize`; boolean capabilities are unioned across clients so a
    * feature advertised by ANY attached client (Zed or a remote one) enables the
@@ -1497,6 +1509,9 @@ export class ZcodeAcpServer {
       this.marttyClientSeen = true;
       const root = clientConnectionRoot(client);
       if (root !== undefined) this.marttyConnectionRoots.add(root);
+    }
+    if (isWizardStyleFormClient(this.clientName)) {
+      this.wizardClientSeen = true;
     }
     this.mergeClientCapabilities((params.clientCapabilities as ClientCapabilities) ?? {});
     log(

@@ -51,14 +51,11 @@ export function isAskUserQuestion(method: string, params: unknown): boolean {
  * Whether this client renders an elicitation form schema as a multi-step
  * wizard — one step per field — instead of one single form.
  *
- * T3 Code does: its stepper walked the AskUserQuestion answer field and the
- * free-text companion as if they were two consecutive questions, and the
- * companion's answer overrides the dropdown pick by design. For such clients
- * the AskUserQuestion form is built WITHOUT the companion field, so the form
- * walks as a single step per question (elicitation is never auto-answered by
- * permission modes; the request_permission fallback is).
+ * T3 Code does: its stepper walks each schema field as a separate question.
+ * For such clients the AskUserQuestion form omits the free-text companion so
+ * the form walks as a single step per question.
  */
-export function clientPrefersPermissionPopups(clientName: string | null | undefined): boolean {
+export function isWizardStyleFormClient(clientName: string | null | undefined): boolean {
   return (clientName ?? "").toLowerCase().includes("t3-code");
 }
 
